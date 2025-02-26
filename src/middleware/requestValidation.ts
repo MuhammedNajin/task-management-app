@@ -1,12 +1,17 @@
+// src/middleware/requestValidation.ts
 import { Request, Response, NextFunction } from 'express';
 import { z, ZodSchema } from 'zod';
 import { ErrorResponse } from '../utils/ResponseFormat/ErrorResponse';
 import { HttpStatusCode } from '../utils/types/HttpStatusCode';
 
-export const validateRequest = (schema: ZodSchema) => {
+export const validateRequest = (
+  schema: ZodSchema,
+  source: 'body' | 'params' = 'body'
+) => {
   return (req: Request, res: Response, next: NextFunction) => {
     try {
-      schema.parse(req.body);
+      const dataToValidate = source === 'body' ? req.body : req.params;
+      schema.parse(dataToValidate);
       next();
     } catch (error) {
       if (error instanceof z.ZodError) {

@@ -2,6 +2,9 @@ import { UserRepository, MongoUserRepository } from '../repositories/UserReposit
 import { PasswordService, BcryptPasswordService } from '../services/PasswordService';
 import { TokenService, JwtTokenService } from '../services/TokenService';
 import { AuthService, DefaultAuthService } from '../services/AuthService';
+import { MongoTaskRepository } from '../repositories/TaskRepository';
+import { TaskRepository } from '../domain/repositories/TaskRepository';
+import { DefaultTaskService } from '../services/TaskService';
 
 export class DIContainer {
   private static instance: DIContainer;
@@ -9,8 +12,10 @@ export class DIContainer {
 
   private constructor() {
     this.services.set('UserRepository', new MongoUserRepository());
+    this.services.set('TaskRepository', new MongoTaskRepository());
     this.services.set('PasswordService', new BcryptPasswordService());
     this.services.set('TokenService', new JwtTokenService(process.env.JWT_SECRET || 'your-secret-key'));
+    
 
     this.services.set(
       'AuthService',
@@ -19,6 +24,13 @@ export class DIContainer {
         this.get<PasswordService>('PasswordService'),
         this.get<TokenService>('TokenService')
       )
+    );
+
+    this.services.set(
+        'TaskService',
+        new DefaultTaskService(
+            this.get<TaskRepository>('TaskRepository')
+        )
     );
   }
 
