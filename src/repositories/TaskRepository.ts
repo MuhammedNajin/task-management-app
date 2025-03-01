@@ -7,11 +7,15 @@ export class MongoTaskRepository implements TaskRepository {
     private readonly model = TaskModel;
 
     async findById(id: string): Promise<Task | null> {
-        return this.model.findById(id).lean();
+        return this.model.findOne({ _id: id, isDeleted: false })
+            .lean()
+            .populate('subtasks');
     }
 
     async findAll(): Promise<Task[]> {
-        return this.model.find().lean();
+        return this.model.find({ isDeleted: false })
+            .lean()
+            .populate('subtasks');
     }
 
     async create(task: Task): Promise<Task> {
@@ -20,19 +24,35 @@ export class MongoTaskRepository implements TaskRepository {
     }
 
     async update(id: string, task: Partial<Task>): Promise<Task | null> {
-        return this.model.findByIdAndUpdate(id, task, { new: true }).lean();
+        return this.model.findOneAndUpdate(
+            { _id: id, isDeleted: false },
+            task,
+            { new: true }
+        )
+        .lean()
+        .populate('subtasks');
     }
 
     async delete(id: string): Promise<boolean> {
-        const result = await this.model.findByIdAndDelete(id);
+        const result = await this.update(id, { isDeleted: true });
         return !!result;
     }
 
     async findByUserId(userId: string): Promise<Task[]> {
-        return this.model.find({ userId }).lean();
+        return this.model.find({ 
+            userId, 
+            isDeleted: false 
+        })
+        .lean()
+        .populate('subtasks');
     }
 
     async findByStatus(status: string): Promise<Task[]> {
-        return this.model.find({ status }).lean();
+        return this.model.find({ 
+            status, 
+            isDeleted: false 
+        })
+        .lean()
+        .populate('subtasks');
     }
 }

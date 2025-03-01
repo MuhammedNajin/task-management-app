@@ -1,7 +1,8 @@
 import { UserRepository } from '../repositories/UserRepository';
 import { PasswordService } from './PasswordService';
 import { TokenService } from './TokenService';
-import { User } from '../models/user_model';
+import { UserDocument } from '../models/user_model';
+import { User } from '../domain/entities/User';
 
 
 export interface UserRegistrationDto {
@@ -19,6 +20,7 @@ export interface AuthResultDto {
   success: boolean;
   token?: string;
   message: string;
+  user?: User | null;
 }
 
 export interface AuthService {
@@ -59,7 +61,7 @@ export class DefaultAuthService implements AuthService {
 
   async login(dto: LoginDto): Promise<AuthResultDto> {
     const { usernameOrEmail, password } = dto;
-    let user: User | null = null;
+    let user: UserDocument | null = null;
      
     if (usernameOrEmail.includes('@')) {
       user = await this.userRepository.findByEmail(usernameOrEmail);
@@ -70,8 +72,27 @@ export class DefaultAuthService implements AuthService {
     if (!user || !(await this.passwordService.verifyPassword(password, user.passwordHash))) {
       return { success: false, message: 'Invalid credentials' };
     }
+    
 
     const token = this.tokenService.generateToken(user);
-    return { success: true, token, message: 'Login successful' };
+
+    
+    
+    // Create a new object with only the fields we want
+    const transformedUser = {
+      id: user._id as string,
+      username: user.username,
+      email: user.email,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+      // Add any other fields you want to include
+    };
+  
+    return { 
+      success: true, 
+      token, 
+      message: 'Login successful', 
+      user: transformedUser 
+    };
   }
 }

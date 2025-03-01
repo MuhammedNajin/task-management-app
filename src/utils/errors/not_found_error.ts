@@ -1,11 +1,11 @@
 import { HttpStatusCode } from "../types/HttpStatusCode";
 import { CustomError } from "./custom_error";
 
-export class UnauthorizedError extends CustomError {
-  public readonly statusCode = HttpStatusCode.UNAUTHORIZED;
+export class NotFoundError extends CustomError {
+  public readonly statusCode = HttpStatusCode.NOT_FOUND;
   public readonly isOperational = true;
 
-  constructor(message: string = 'Unauthorized', details?: any) {
+  constructor(message: string = 'Resource not found', details?: any) {
     super(message, details);
   }
 

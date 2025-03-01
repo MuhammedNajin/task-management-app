@@ -1,10 +1,9 @@
 import jwt, { SignOptions } from 'jsonwebtoken';
 import { User } from '../models/user_model';
-
 export interface TokenService {
-  generateToken(user: User): string;
-  verifyToken(token: string): any;
-}
+    generateToken(user: any): string;
+    verifyToken(token: string): Promise<User>;
+  }
 
 export class JwtTokenService implements TokenService {
   constructor(
@@ -30,11 +29,12 @@ export class JwtTokenService implements TokenService {
     return jwt.sign(payload, this.secretKey, options);
   }
 
-  verifyToken(token: string): any {
-    try {
-      return jwt.verify(token, this.secretKey);
-    } catch (error) {
-      throw new Error('Invalid or expired token');
-    }
+  async verifyToken(token: string): Promise<User> {
+    return new Promise((resolve, reject) => {
+      jwt.verify(token, this.secretKey, (err: jwt.JsonWebTokenError | null, decoded: any) => {
+        if (err) reject(err);
+        else resolve(decoded);
+      });
+    });
   }
 }

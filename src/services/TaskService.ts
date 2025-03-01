@@ -6,12 +6,20 @@ export interface TaskCreateDto {
     title: string;
     description: string;
     userId: string;
+    priority?: 'low' | 'medium' | 'high';
+    category?: string;
+    dueDate?: Date;
+    subtasks?: string[];
 }
 
 export interface TaskUpdateDto {
     title?: string;
     description?: string;
     status?: 'pending' | 'in_progress' | 'completed';
+    priority?: 'low' | 'medium' | 'high';
+    category?: string;
+    dueDate?: Date;
+    subtasks?: string[];
 }
 
 export interface TaskService {
@@ -29,6 +37,7 @@ export class DefaultTaskService implements TaskService {
         const task: Task = {
             ...dto,
             status: 'pending',
+            priority: dto.priority || 'medium',
             createdAt: new Date(),
         };
         return await this.taskRepository.create(task);
@@ -50,6 +59,11 @@ export class DefaultTaskService implements TaskService {
     }
 
     async deleteTask(id: string): Promise<boolean> {
-        return await this.taskRepository.delete(id);
+        // Soft delete - update instead of remove
+        const result = await this.taskRepository.update(id, {
+            isDeleted: true,
+            updatedAt: new Date()
+        });
+        return !!result;
     }
 }

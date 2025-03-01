@@ -2,6 +2,9 @@ import express, { Express, Request, Response } from 'express';
 import cors from 'cors';
 import routes from './routes';
 import { Database } from './config/db.config';
+import { globalErrorHandler } from './middleware/errorHandler';
+import { NotFoundError } from './utils/errors/not_found_error';
+import { loggerMiddleware } from './middleware/winstonLogger';
 
 require('dotenv').config();
 
@@ -21,11 +24,18 @@ export class App {
   }
 
   private configureMiddleware(): void {
-    this.app.use(cors());
+    this.app.use(cors({
+      origin: [
+        "http://localhost:5173"
+      ], 
+       credentials: true,
+    }));
     this.app.use(express.json());
   }
 
   private configureRoutes(): void {
+
+    this.app.use(loggerMiddleware);
 
     this.app.get('/api/health', (req: Request, res: Response) => {
       res.status(200).json({
@@ -37,6 +47,13 @@ export class App {
     });
 
     this.app.use('/api', routes);
+
+    this.app.use("*", (req: Request) => {
+
+        throw new NotFoundError('Resource not found');
+    })
+
+    this.app.use(globalErrorHandler)
   }
 
   private async initializeDatabase(): Promise<void> {

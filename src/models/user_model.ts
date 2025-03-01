@@ -14,6 +14,7 @@ export interface UserDocument extends Document, Omit<User, '_id'> {
   email: string;
   passwordHash: string;
   createdAt: Date;
+  updatedAt?: Date;
 }
 
 const UserSchema: Schema<UserDocument> = new Schema(
@@ -48,12 +49,13 @@ const UserSchema: Schema<UserDocument> = new Schema(
     timestamps: true,
     toJSON: {
       transform: (_doc, ret) => {
-        ret._id = ret._id.toString();
+        ret.id = ret._id.toString();
+        delete ret._id;
         delete ret.passwordHash;
         delete ret.__v;
         return ret;
       },
-      virtuals: true,
+      // virtuals: true,
     },
   }
 );

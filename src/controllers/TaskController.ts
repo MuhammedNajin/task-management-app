@@ -12,7 +12,10 @@ export class TaskController {
             const dto: TaskCreateDto = req.body;
             const task = await this.taskService.createTask(dto);
             res.status(HttpStatusCode.CREATED)
-                .json(new SuccessResponse({ data: task, message: 'Task created successfully' }));
+                .json(new SuccessResponse({ 
+                    data: task, 
+                    message: 'Task created successfully' 
+                }));
         } catch (error) {
             next(error);
         }
@@ -51,7 +54,10 @@ export class TaskController {
                 return;
             }
             res.status(HttpStatusCode.OK)
-                .json(new SuccessResponse({ data: task, message: 'Task updated successfully' }));
+                .json(new SuccessResponse({ 
+                    data: task, 
+                    message: 'Task updated successfully' 
+                }));
         } catch (error) {
             next(error);
         }
@@ -65,10 +71,9 @@ export class TaskController {
                 return;
             }
             res.status(HttpStatusCode.OK)
-                .json(new SuccessResponse({ message: 'Task deleted successfully' }));
+                .json(new SuccessResponse({ message: 'Task soft deleted successfully' }));
         } catch (error) {
             next(error);
         }
     }
 }
-

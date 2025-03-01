@@ -1,5 +1,5 @@
 import { User } from '../domain/entities/User';
-import { UserModel } from '../models/user_model';
+import { UserDocument, UserModel } from '../models/user_model';
 
 
 export interface UserRepository {
@@ -8,8 +8,8 @@ export interface UserRepository {
   create(entity: User): Promise<User>;
   update(id: string, entity: Partial<User>): Promise<User | null>;
   delete(id: string): Promise<boolean>;
-  findByUsername(username: string): Promise<User | null>;
-  findByEmail(email: string): Promise<User | null>;
+  findByUsername(username: string): Promise<UserDocument | null>;
+  findByEmail(email: string): Promise<UserDocument | null>;
   usernameExists(username: string): Promise<boolean>;
   emailExists(email: string): Promise<boolean>;
 }
@@ -40,11 +40,11 @@ export class MongoUserRepository implements UserRepository {
     return !!result;
   }
 
-  async findByEmail(email: string): Promise<User | null> {
+  async findByEmail(email: string): Promise<UserDocument | null> {
     return this.model.findOne({ email }).select('+passwordHash').lean();
   }
 
-  async findByUsername(username: string): Promise<User | null> {
+  async findByUsername(username: string): Promise<UserDocument | null> {
     return this.model.findOne({ username }).select('+passwordHash').lean(); 
   }
 

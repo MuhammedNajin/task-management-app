@@ -34,7 +34,7 @@ export class AuthController {
 
       res
         .status(HttpStatusCode.OK)
-        .json(new SuccessResponse({ data: { token: result.token, message: result.message }}));
+        .json(new SuccessResponse({ data: { token: result.token, message: result.message, user: result.user } }));
     } catch (error) {
        
       next(error)    

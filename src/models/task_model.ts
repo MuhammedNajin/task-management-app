@@ -1,25 +1,26 @@
-// src/models/task_model.ts
 import mongoose, { Schema, Document } from 'mongoose';
 
+// Define the Task interface
 export interface Task {
     _id?: string;
     title: string;
+    slug?: string;
     description: string;
     status: 'pending' | 'in_progress' | 'completed';
+    priority: 'low' | 'medium' | 'high';
+    category?: string;
+    dueDate?: Date;
     userId: string;
+    subtasks?: string[]; // Array of subtask IDs
     createdAt: Date;
     updatedAt?: Date;
+    isDeleted?: boolean;
 }
 
-export interface TaskDocument extends Document, Omit<Task, '_id'> {
-    title: string;
-    description: string;
-    status: 'pending' | 'in_progress' | 'completed';
-    userId: string;
-    createdAt: Date;
-    updatedAt?: Date;
-}
+// Define the Task Document interface extending Mongoose Document
+export interface TaskDocument extends Document, Omit<Task, '_id'> {}
 
+// Create the Task Schema
 const TaskSchema: Schema<TaskDocument> = new Schema(
     {
         title: {
@@ -27,6 +28,12 @@ const TaskSchema: Schema<TaskDocument> = new Schema(
             required: [true, 'Title is required'],
             trim: true,
             minlength: [3, 'Title must be at least 3 characters'],
+            maxlength: [100, 'Title cannot exceed 100 characters'],
+        },
+        slug: {
+            type: String,
+            unique: true,
+            trim: true,
         },
         description: {
             type: String,
@@ -35,33 +42,71 @@ const TaskSchema: Schema<TaskDocument> = new Schema(
         },
         status: {
             type: String,
-            enum: ['pending', 'in_progress', 'completed'],
+            enum: {
+                values: ['pending', 'in_progress', 'completed'],
+                message: '{VALUE} is not a valid status',
+            },
             default: 'pending',
+        },
+        priority: {
+            type: String,
+            enum: {
+                values: ['low', 'medium', 'high'],
+                message: '{VALUE} is not a valid priority',
+            },
+            default: 'medium',
+        },
+        category: {
+            type: String,
+            trim: true,
+        },
+        dueDate: {
+            type: Date,
         },
         userId: {
             type: String,
             required: [true, 'User ID is required'],
-            ref: 'User',
+            ref: 'User', // Assuming you have a User model
         },
-        createdAt: {
-            type: Date,
-            default: Date.now,
-        },
-        updatedAt: {
-            type: Date,
+        subtasks: [{
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Task', // Self-reference for subtasks
+        }],
+        isDeleted: {
+            type: Boolean,
+            default: false,
+            select: false, // Excluded from queries by default
         },
     },
     {
-        timestamps: true,
+        timestamps: true, // Automatically adds createdAt and updatedAt
         toJSON: {
             transform: (_doc, ret) => {
                 ret.id = ret._id.toString();
                 delete ret._id;
                 delete ret.__v;
+                delete ret.isDeleted; // Don't expose isDeleted in API responses
+                return ret;
+            },
+        },
+        toObject: {
+            transform: (_doc, ret) => {
+                ret.id = ret._id.toString();
+                delete ret._id;
+                delete ret.__v;
+                delete ret.isDeleted;
                 return ret;
             },
         },
     }
 );
 
+// Indexes for better query performance
+// TaskSchema.index({ userId: 1 });
+// TaskSchema.index({ status: 1 });
+// TaskSchema.index({ priority: 1 });
+// TaskSchema.index({ dueDate: 1 });
+// TaskSchema.index({ slug: 1 }, { unique: true, sparse: true });
+
+// Create and export the model
 export const TaskModel = mongoose.model<TaskDocument>('Task', TaskSchema);
