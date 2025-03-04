@@ -1,6 +1,5 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
-// Define the Task interface
 export interface Task {
     _id?: string;
     title: string;
@@ -11,16 +10,14 @@ export interface Task {
     category?: string;
     dueDate?: Date;
     userId: string;
-    subtasks?: string[]; // Array of subtask IDs
+    subtasks?: string[];
     createdAt: Date;
     updatedAt?: Date;
     isDeleted?: boolean;
 }
 
-// Define the Task Document interface extending Mongoose Document
 export interface TaskDocument extends Document, Omit<Task, '_id'> {}
 
-// Create the Task Schema
 const TaskSchema: Schema<TaskDocument> = new Schema(
     {
         title: {
@@ -68,24 +65,25 @@ const TaskSchema: Schema<TaskDocument> = new Schema(
             required: [true, 'User ID is required'],
             ref: 'User', // Assuming you have a User model
         },
+
         subtasks: [{
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Task', // Self-reference for subtasks
+            type: String, 
         }],
+
         isDeleted: {
             type: Boolean,
             default: false,
-            select: false, // Excluded from queries by default
+            select: false,
         },
     },
     {
-        timestamps: true, // Automatically adds createdAt and updatedAt
+        timestamps: true,
         toJSON: {
             transform: (_doc, ret) => {
                 ret.id = ret._id.toString();
                 delete ret._id;
                 delete ret.__v;
-                delete ret.isDeleted; // Don't expose isDeleted in API responses
+                delete ret.isDeleted;
                 return ret;
             },
         },
@@ -101,12 +99,5 @@ const TaskSchema: Schema<TaskDocument> = new Schema(
     }
 );
 
-// Indexes for better query performance
-// TaskSchema.index({ userId: 1 });
-// TaskSchema.index({ status: 1 });
-// TaskSchema.index({ priority: 1 });
-// TaskSchema.index({ dueDate: 1 });
-// TaskSchema.index({ slug: 1 }, { unique: true, sparse: true });
 
-// Create and export the model
 export const TaskModel = mongoose.model<TaskDocument>('Task', TaskSchema);

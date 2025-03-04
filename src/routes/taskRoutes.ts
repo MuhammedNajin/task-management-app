@@ -1,5 +1,4 @@
-// src/routes/taskRoutes.ts
-import express from 'express';
+import express, { Router } from 'express';
 import { TaskController } from '../controllers/TaskController';
 import { DIContainer } from '../di/container';
 import { validateRequest } from '../middleware/requestValidation';
@@ -10,46 +9,61 @@ import {
   userIdSchema 
 } from '../utils/validationSchema/Task.schema';
 import { TaskUrl } from '../utils/types/Urls';
+import { Server } from 'node:http';
 
-const router = express.Router();
-const taskController = new TaskController(
-  DIContainer.getInstance().get('TaskService')
-);
 
-const validateTaskCreate = validateRequest(taskCreateSchema);
-const validateTaskUpdate = validateRequest(taskUpdateSchema);
-const validateTaskId = validateRequest(taskIdSchema, 'params');
-const validateUserId = validateRequest(userIdSchema, 'params');
+const initializeTaskRouter = (httpServer: Server) => {
+  const router = express.Router();
+  const taskController = new TaskController(
+    DIContainer.getInstance(httpServer).get('TaskService')
+  );
+  
+  const validateTaskCreate = validateRequest(taskCreateSchema);
+  const validateTaskUpdate = validateRequest(taskUpdateSchema);
+  const validateTaskId = validateRequest(taskIdSchema, 'params');
+  const validateUserId = validateRequest(userIdSchema, 'params');
 
-router.post(
-  TaskUrl.CREATE,
-  validateTaskCreate,
-  taskController.create.bind(taskController)
-);
+  router.use((req, res, next) => {  
+    console.log('Task routes', req.url);
+    next();
+  });
+  
+  router.post(
+    TaskUrl.CREATE,
+    validateTaskCreate,
+    taskController.create.bind(taskController)
+  );
+  
+  router.get(
+    TaskUrl.GET_BY_ID,
+    validateTaskId,
+    taskController.getById.bind(taskController)
+  );
+  
+  router.get(
+    TaskUrl.GET_USER_TASKS,
+    validateUserId,
+    taskController.getUserTasks.bind(taskController)
+  );
+  
+  router.put(
+    TaskUrl.UPDATE,
+    validateTaskId,
+    validateTaskUpdate,
+    taskController.update.bind(taskController)
+  );
+  
+  router.delete(
+    TaskUrl.DELETE,
+    validateTaskId,
+    taskController.delete.bind(taskController)
 
-router.get(
-  TaskUrl.GET_BY_ID,
-  validateTaskId,
-  taskController.getById.bind(taskController)
-);
+  );
+  
+  return router
+}
 
-router.get(
-  TaskUrl.GET_USER_TASKS,
-  validateUserId,
-  taskController.getUserTasks.bind(taskController)
-);
 
-router.put(
-  TaskUrl.UPDATE,
-  validateTaskId,
-  validateTaskUpdate,
-  taskController.update.bind(taskController)
-);
 
-router.delete(
-  TaskUrl.DELETE,
-  validateTaskId,
-  taskController.delete.bind(taskController)
-);
 
-export default router;
+export { initializeTaskRouter }

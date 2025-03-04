@@ -1,4 +1,3 @@
-// src/repositories/TaskRepository.ts
 import { Task } from '../domain/entities/Task';
 import { TaskModel } from '../models/task_model';
 import { TaskRepository } from '../domain/repositories/TaskRepository';
@@ -14,8 +13,6 @@ export class MongoTaskRepository implements TaskRepository {
 
     async findAll(): Promise<Task[]> {
         return this.model.find({ isDeleted: false })
-            .lean()
-            .populate('subtasks');
     }
 
     async create(task: Task): Promise<Task> {
@@ -29,8 +26,7 @@ export class MongoTaskRepository implements TaskRepository {
             task,
             { new: true }
         )
-        .lean()
-        .populate('subtasks');
+        
     }
 
     async delete(id: string): Promise<boolean> {
@@ -43,8 +39,7 @@ export class MongoTaskRepository implements TaskRepository {
             userId, 
             isDeleted: false 
         })
-        .lean()
-        .populate('subtasks');
+        
     }
 
     async findByStatus(status: string): Promise<Task[]> {

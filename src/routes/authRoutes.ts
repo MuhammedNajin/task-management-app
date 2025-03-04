@@ -7,25 +7,33 @@ import {
   userRegistrationSchema,
 } from "../utils/validationSchema/Auth.schema";
 import { AuthUrl } from "../utils/types/Urls";
+import { Server } from "node:http";
 
-const router = express.Router();
-const authController = new AuthController(
-  DIContainer.getInstance().get("AuthService")
-);
 
-const validateLogin = validateRequest(loginSchema);
-const validateRegister = validateRequest(userRegistrationSchema);
 
-router.post(
-  AuthUrl.REGISTER,
-  validateRegister,
-  authController.register.bind(authController)
-);
+const initializeAuthRoute = (httpServer: Server) => {
+  const router = express.Router();
+  const authController = new AuthController(
+    DIContainer.getInstance(httpServer).get("AuthService")
+  );
+  
+  const validateLogin = validateRequest(loginSchema);
+  const validateRegister = validateRequest(userRegistrationSchema);
+  
+  router.post(
+    AuthUrl.REGISTER,
+    validateRegister,
+    authController.register.bind(authController)
+  );
+  
+  router.post(
+    AuthUrl.LOGIN,
+    validateLogin,
+    authController.login.bind(authController)
+  );
+  return router;
+}
 
-router.post(
-  AuthUrl.LOGIN,
-  validateLogin,
-  authController.login.bind(authController)
-);
 
-export default router;
+
+export { initializeAuthRoute }

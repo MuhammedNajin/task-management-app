@@ -1,23 +1,29 @@
 import express, { Express, Request, Response } from 'express';
 import cors from 'cors';
-import routes from './routes';
+import { initializeRoute } from './routes';
 import { Database } from './config/db.config';
 import { globalErrorHandler } from './middleware/errorHandler';
 import { NotFoundError } from './utils/errors/not_found_error';
-import { loggerMiddleware } from './middleware/winstonLogger';
-
+import { requestLogger } from './middleware/winstonLogger';
+import { createServer, Server } from 'node:http';
+import { DIContainer } from './di/container';
+import SocketService from './services/SocketService';
 require('dotenv').config();
 
 export class App {
   private app: Express;
   private port: string | number;
   private database: Database;
+  public httpServer: Server;
+  private socketService: SocketService;
 
   constructor() {
     this.app = express();
     this.port = process.env.PORT || 5000;
     this.database = new Database();
-
+    this.httpServer = createServer(this.app);
+    this.socketService = SocketService.getInstance(this.httpServer);
+    DIContainer.getInstance(this.httpServer);
     this.configureMiddleware();
     this.configureRoutes();
     this.initializeDatabase();
@@ -31,11 +37,12 @@ export class App {
        credentials: true,
     }));
     this.app.use(express.json());
+    
   }
 
   private configureRoutes(): void {
 
-    this.app.use(loggerMiddleware);
+    this.app.use(requestLogger);
 
     this.app.get('/api/health', (req: Request, res: Response) => {
       res.status(200).json({
@@ -46,7 +53,7 @@ export class App {
       });
     });
 
-    this.app.use('/api', routes);
+    this.app.use('/api', initializeRoute(this.httpServer));
 
     this.app.use("*", (req: Request) => {
 
@@ -61,7 +68,7 @@ export class App {
   }
 
   public start(): void {
-    this.app.listen(this.port, () => {
+    this.httpServer.listen(this.port, () => {
       console.log(`Server running on port ${this.port}`);
     });
   }
@@ -72,5 +79,5 @@ export class App {
   }
 }
 
-const appInstance = new App();
+export const appInstance = new App();
 appInstance.start();
