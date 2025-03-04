@@ -44,6 +44,7 @@ export class DefaultTaskService implements TaskService {
             createdAt: new Date(),
         };
         const createdTask = await this.taskRepository.create(task);
+        console.log("task created",  this.socketService, createdTask)
         if (this.socketService) {
             this.socketService.emitTaskCreated(createdTask);
         }
@@ -63,6 +64,8 @@ export class DefaultTaskService implements TaskService {
             ...dto,
             updatedAt: new Date(),
         });
+        console.log("update task", updatedTask, this.socketService);
+        
         if (updatedTask && this.socketService) {
             this.socketService.emitTaskUpdated(updatedTask);
         }
