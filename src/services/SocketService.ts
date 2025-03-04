@@ -10,7 +10,7 @@ export class SocketService {
     console.log("http??????????????????", httpServer);
     this.io = new Server(httpServer, {
       cors: {
-        origin: ["http://localhost:5173"],
+        origin: ["http://localhost:5173", "https://task-management-frontend-xi-seven.vercel.app"],
         methods: ['GET', 'POST'],
       },
       path: "/socket.io"
