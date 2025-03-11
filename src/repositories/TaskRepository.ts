@@ -1,6 +1,7 @@
 import { Task } from '../domain/entities/Task';
 import { TaskModel } from '../models/task_model';
 import { TaskRepository } from '../domain/repositories/TaskRepository';
+import { BadRequestError } from '../utils/errors/bad_request_error';
 
 export class MongoTaskRepository implements TaskRepository {
     private readonly model = TaskModel;
@@ -16,6 +17,10 @@ export class MongoTaskRepository implements TaskRepository {
     }
 
     async create(task: Task): Promise<Task> {
+        const exist = await this.model.findOne({ title: task.title });
+        if(exist) {
+             throw new BadRequestError("Task already exist");
+        }
         const createdTask = await this.model.create(task);
         return createdTask.toObject();
     }
