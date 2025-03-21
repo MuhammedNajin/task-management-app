@@ -10,4 +10,5 @@ export enum TaskUrl {
   GET_USER_TASKS = "/users/:userId/tasks",
   UPDATE = "/tasks/:id",
   DELETE = "/tasks/:id",
+  UPDATE_SUBTASK = "/tasks/:taskId/subtasks/:subtaskIndex"
 }
